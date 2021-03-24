@@ -12,6 +12,5 @@ jobs:
           go-version: 1.15
       - uses: actions/checkout@v2
       - run: |
-          echo $GOPATH
-          go env
-#          go test ./... -v
+          go install
+          go test ./... -v
