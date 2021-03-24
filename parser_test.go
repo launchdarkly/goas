@@ -260,7 +260,7 @@ func TestExample(t *testing.T) {
 
 func TestDeterministic(t *testing.T) {
 	var allOutputs []string
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
 
