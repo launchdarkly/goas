@@ -157,7 +157,7 @@ func newParser(modulePath, mainFilePath, handlerPath string, debug bool) (*parse
 	goModCacheInfo, err := os.Stat(goModCachePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, err
+			return nil, fmt.Errorf("could not find goModCachePath: %w", err)
 		}
 		return nil, fmt.Errorf("cannot get information of %s: %s", goModCachePath, err)
 	}
