@@ -1445,7 +1445,9 @@ func parseStructTags(astField *ast.Field, structSchema *SchemaObject, fieldSchem
 		}
 
 		if tag := astFieldTag.Get("example"); tag != "" {
-			if fieldSchema.Type != nil {
+			if fieldSchema.Type == nil {
+				fieldSchema.Example = tag
+			} else {
 				switch *fieldSchema.Type {
 				case "boolean":
 					fieldSchema.Example, _ = strconv.ParseBool(tag)
