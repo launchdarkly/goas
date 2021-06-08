@@ -158,9 +158,7 @@ func genSchemeaObjectID(pkgName, typeName string) string {
 	typeNameParts := strings.Split(typeName, ".")
 	pkgName = replaceBackslash(pkgName)
 	pkgNameParts := strings.Split(pkgName, "/")
-	var getPkgName []string
-	getPkgName = []string{pkgNameParts[len(pkgNameParts)-1]}
-	return strings.Join(append(getPkgName, typeNameParts[len(typeNameParts)-1]), ".")
+	return strings.Join(append([]string{pkgNameParts[len(pkgNameParts)-1]}, typeNameParts[len(typeNameParts)-1]), ".")
 }
 
 func replaceBackslash(origin string) string {
