@@ -156,7 +156,11 @@ func trimeSchemaRefLinkPrefix(ref string) string {
 
 func genSchemeaObjectID(pkgName, typeName string) string {
 	typeNameParts := strings.Split(typeName, ".")
-	return typeNameParts[len(typeNameParts)-1]
+	pkgName = replaceBackslash(pkgName)
+	pkgNameParts := strings.Split(pkgName, "/")
+	var getPkgName []string
+	getPkgName = []string{pkgNameParts[len(pkgNameParts)-1]}
+	return strings.Join(append(getPkgName, typeNameParts[len(typeNameParts)-1]), ".")
 }
 
 func replaceBackslash(origin string) string {

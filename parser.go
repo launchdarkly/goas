@@ -1017,8 +1017,10 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 	// see if we've already parsed this type
 	if knownObj, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, typeName)]; ok {
 		schemaObject = knownObj
-	} else {
+	} else if foundType, ok := p.KnownIDSchema[typeName]; ok {
 		// if not, parse it now
+		schemaObject = foundType
+	} else {
 		parsedObject, err := p.parseSchemaObject(pkgPath, pkgName, typeName, true)
 		if err != nil {
 			return schemaObject, err
