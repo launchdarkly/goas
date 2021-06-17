@@ -693,6 +693,13 @@ func (p *parser) parsePaths() error {
 								return err
 							}
 						}
+					} else if astVarDeclaration, ok := astDeclaration.(*ast.GenDecl); ok {
+						if astVarDeclaration.Doc != nil && astVarDeclaration.Doc.List != nil {
+							err = p.parseOperation(pkgPath, pkgName, astVarDeclaration.Doc.List)
+							if err != nil {
+								return err
+							}
+						}
 					}
 				}
 			}
