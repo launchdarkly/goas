@@ -289,7 +289,10 @@ func (p *parser) parseInfo() error {
 				case "@title":
 					p.OpenAPI.Info.Title = value
 				case "@description":
-					p.OpenAPI.Info.Description = value
+					if p.OpenAPI.Info.Description == nil {
+						p.OpenAPI.Info.Description = &ReffableString{}
+					}
+					p.OpenAPI.Info.Description.Value = value
 				case "@termsofserviceurl":
 					p.OpenAPI.Info.TermsOfService = value
 				case "@contactname":

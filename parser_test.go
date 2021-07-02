@@ -57,3 +57,14 @@ func Test_parseRouteComment(t *testing.T) {
 	duplicateError := p.parseRouteComment(operation, "@Router v2/foo/bar [get]")
 	require.Error(t, duplicateError)
 }
+
+func Test_infoDescriptionRef(t *testing.T) {
+	p, err := newParser("example/", "example/main.go", "", false)
+	require.NoError(t, err)
+	p.OpenAPI.Info.Description = &ReffableString{Value: "$ref:http://dopeoplescroll.com/"}
+
+	result, err := json.Marshal(p.OpenAPI.Info.Description)
+
+	require.NoError(t, err)
+	require.Equal(t, []byte("{\"$ref\":\"http://dopeoplescroll.com/\"}"), result)
+}
