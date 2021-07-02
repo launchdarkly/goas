@@ -45,7 +45,7 @@ type InfoObject struct {
 }
 
 // Wrapper for a string that may be of the form `$ref:foo`
-// denoting it should be json encoded as `{ "$ref": "foo"}`
+// denoting it should be json encoded as `{ "$ref": "foo" }`
 type ReffableString struct {
 	Value string
 }
