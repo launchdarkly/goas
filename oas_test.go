@@ -12,14 +12,14 @@ func TestReffableString(t *testing.T) {
 		result, err := json.Marshal(&ReffableString{Value: "Foobarbazington Esq."})
 
 		require.NoError(t, err)
-		require.Equal(t, ([]byte)("\"Foobarbazington Esq.\""), result)
+		require.Equal(t, "\"Foobarbazington Esq.\"", string(result))
 	})
 
 	t.Run("marshals an object", func(t *testing.T) {
 		result, err := json.Marshal(&ReffableString{Value: "$ref:foo/bar/baz"})
 
 		require.NoError(t, err)
-		require.Equal(t, ([]byte)("{\"$ref\":\"foo/bar/baz\"}"), result)
+		require.Equal(t, "{\"$ref\":\"foo/bar/baz\"}", string(result))
 	})
 
 	t.Run("missing url", func(t *testing.T) {

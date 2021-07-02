@@ -292,6 +292,6 @@ type SecuritySchemeOauthFlowObject struct {
 }
 
 type TagDefinition struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	Name        string          `json:"name"`
+	Description *ReffableString `json:"description,omitempty"`
 }

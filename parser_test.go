@@ -66,7 +66,7 @@ func Test_infoDescriptionRef(t *testing.T) {
 	result, err := json.Marshal(p.OpenAPI.Info.Description)
 
 	require.NoError(t, err)
-	require.Equal(t, []byte("{\"$ref\":\"http://dopeoplescroll.com/\"}"), result)
+	require.Equal(t, "{\"$ref\":\"http://dopeoplescroll.com/\"}", string(result))
 }
 
 func Test_parseTags(t *testing.T) {
@@ -81,7 +81,15 @@ func Test_parseTags(t *testing.T) {
 		result, err := parseTags("@Tags \"Foobar\" \"Barbaz\"")
 
 		require.NoError(t, err)
-		require.Equal(t, &TagDefinition{Name: "Foobar", Description: "Barbaz"}, result)
+		require.Equal(t, &TagDefinition{Name: "Foobar", Description: &ReffableString{Value: "Barbaz"}}, result)
+	})
+
+	t.Run("name and description including ref ", func(t *testing.T) {
+		result, err := parseTags("@Tags \"Foobar\" \"$ref:path/to/baz\"")
+		require.NoError(t, err)
+		b, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"name\":\"Foobar\",\"description\":{\"$ref\":\"path/to/baz\"}}", string(b))
 	})
 
 	t.Run("invalid tag", func(t *testing.T) {

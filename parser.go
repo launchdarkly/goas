@@ -441,7 +441,7 @@ func parseTags(comment string) (*TagDefinition, error) {
 	}
 	tag := TagDefinition{Name: matches[0][1]}
 	if len(matches) > 1 {
-		tag.Description = matches[1][1]
+		tag.Description = &ReffableString{Value: matches[1][1]}
 	}
 
 	return &tag, nil
