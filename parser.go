@@ -804,7 +804,7 @@ func (p *parser) parseParamComment(pkgPath, pkgName string, operation *Operation
 	// {name}  {in}  {goType}  {required}  {description}
 	// user    body  User      true        "Info of a user."
 	// f       file  ignored   true        "Upload a file."
-	re := regexp.MustCompile(`([-\w]+)[\s]+([\w]+)[\s]+([\w./\[\]]+)[\s]+([\w]+)[\s]+"([^"]+)"`)
+	re := regexp.MustCompile(`([-\w]+)[\s]+([\w]+)[\s]+([\w./\[\]\\(\\),]+)[\s]+([\w]+)[\s]+"([^"]+)"`)
 	matches := re.FindStringSubmatch(comment)
 	if len(matches) != 6 {
 		return fmt.Errorf("parseParamComment can not parse param comment \"%s\"", comment)
@@ -1103,6 +1103,61 @@ func (p *parser) registerType(pkgPath, pkgName, typeName string) (string, error)
 	return registerTypeName, nil
 }
 
+func trimSplit(csl string) []string {
+	s := strings.Split(csl, ",")
+	for i := range s {
+		s[i] = strings.TrimSpace(s[i])
+	}
+	return s
+}
+
+func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string, register bool) (*SchemaObject, error) {
+	re := regexp.MustCompile("(oneOf|anyOf|allOf|not)\\(([^\\)]*)\\)")
+	matches := re.FindStringSubmatch(typeName)
+	if len(matches) < 3 {
+		return nil, nil
+	}
+	op := matches[1]
+	if matches[2] == "" {
+		return nil, fmt.Errorf("Expected 1 or more arguments, received '%s'", typeName)
+	}
+	args := trimSplit(matches[2])
+
+	// not only supports one arg
+	if op == "not" && len(args) != 1 {
+		return nil, fmt.Errorf("Invalid number of arguments for not compound type, expected 1 received %d", len(args))
+	}
+
+	var sobs []*SchemaObject
+	for i := range args {
+		result, err := p.parseSchemaObject(pkgPath, pkgName, args[i], register)
+		if err != nil {
+			return nil, err
+		}
+		sobs = append(sobs, result)
+	}
+
+	if op == "not" {
+		return &SchemaObject{
+			Not: sobs[0],
+		}, nil
+	} else if op == "oneOf" {
+		return &SchemaObject{
+			OneOf: sobs,
+		}, nil
+	} else if op == "anyOf" {
+		return &SchemaObject{
+			AnyOf: sobs,
+		}, nil
+	} else if op == "allOf" {
+		return &SchemaObject{
+			AllOf: sobs,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("Invalid composite type '%s'", op)
+	}
+}
+
 func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register bool) (*SchemaObject, error) {
 	var typeSpec *ast.TypeSpec
 	var exist bool
@@ -1148,6 +1203,12 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 		localGoType := goTypesOASTypes[typeName]
 		schemaObject.Type = &localGoType
 		return &schemaObject, nil
+	}
+
+	// handle oneOf/anyOf/allOf/not
+	sob, err := p.handleCompositeType(pkgPath, pkgName, typeName, register)
+	if sob != nil || err != nil {
+		return sob, err
 	}
 
 	// handler other type

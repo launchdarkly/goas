@@ -98,3 +98,69 @@ func Test_parseTags(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func Test_handleCompositeType(t *testing.T) {
+	t.Run("oneOf", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		result, err := p.handleCompositeType("./example", "example.com/example", "oneOf(string,int32)", true)
+		require.NoError(t, err)
+		s, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", string(s))
+	})
+
+	t.Run("anyOf", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		result, err := p.handleCompositeType("./example", "example.com/example", "anyOf(string,int32)", true)
+		require.NoError(t, err)
+		s, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", string(s))
+	})
+
+	t.Run("allOf", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		result, err := p.handleCompositeType("./example", "example.com/example", "allOf(string,int32)", true)
+		require.NoError(t, err)
+		s, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"allOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", string(s))
+	})
+
+	t.Run("not", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		result, err := p.handleCompositeType("./example", "example.com/example", "not(string)", true)
+		require.NoError(t, err)
+		s, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"not\":{\"type\":\"string\"}}", string(s))
+	})
+
+	t.Run("handles whitespace", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		result, err := p.handleCompositeType("./example", "example.com/example", "allOf(  string, int32 )", true)
+		require.NoError(t, err)
+		s, err := json.Marshal(result)
+		require.NoError(t, err)
+		require.Equal(t, "{\"allOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", string(s))
+	})
+
+	t.Run("not only accepts 1 arg", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		_, notErr := p.handleCompositeType("./example", "example.com/example", "not(string,int32)", true)
+		require.Error(t, notErr)
+	})
+
+	t.Run("error when no args", func(t *testing.T) {
+		p, err := newParser("example/", "example/main.go", "", false)
+		require.NoError(t, err)
+		_, notErr := p.handleCompositeType("./example", "example.com/example", "oneOf()", true)
+		require.Error(t, notErr)
+	})
+}
