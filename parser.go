@@ -800,21 +800,6 @@ func (p *parser) parseOperation(pkgPath, pkgName string, astComments []*ast.Comm
 	return nil
 }
 
-func shouldParseSchemaObject(typeName string) bool {
-	if typeName == "time.Time" {
-		return true
-	}
-
-	supportedPrefixes := []string{"[]", "map[]", "oneOf(", "anyOf(", "allOf(", "not("}
-	for i := range supportedPrefixes {
-		if strings.HasPrefix(typeName, supportedPrefixes[i]) {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (p *parser) parseParamComment(pkgPath, pkgName string, operation *OperationObject, comment string) error {
 	// {name}  {in}  {goType}  {required}  {description}
 	// user    body  User      true        "Info of a user."
@@ -915,35 +900,45 @@ func (p *parser) parseParamComment(pkgPath, pkgName string, operation *Operation
 		}
 	}
 
-	if shouldParseSchemaObject(goType) {
-		schema, err := p.parseSchemaObject(pkgPath, pkgName, goType, true)
-		if err != nil {
-			p.debug("parseResponseComment cannot parse goType", goType)
-		}
-		operation.RequestBody.Content[ContentTypeJson] = &MediaTypeObject{
-			Schema: *schema,
-		}
-	} else {
-		typeName, err := p.registerType(pkgPath, pkgName, matches[3])
-		if err != nil {
-			return err
-		}
-		if isBasicGoType(typeName) {
-			operation.RequestBody.Content[ContentTypeJson] = &MediaTypeObject{
-				Schema: SchemaObject{
-					Type: &stringType,
-				},
-			}
-		} else {
-			operation.RequestBody.Content[ContentTypeJson] = &MediaTypeObject{
-				Schema: SchemaObject{
-					Ref: addSchemaRefLinkPrefix(typeName),
-				},
-			}
-		}
+	s, err := p.parseBodyType(pkgPath, pkgName, goType)
+	if err != nil {
+		return err
+	}
+	operation.RequestBody.Content[ContentTypeJson] = &MediaTypeObject{
+		Schema: *s,
 	}
 
 	return nil
+}
+
+func (p *parser) parseBodyType(pkgPath, pkgName, typeName string) (*SchemaObject, error) {
+	if strings.HasPrefix(typeName, "[]") || strings.HasPrefix(typeName, "map[]") || typeName == "time.Time" {
+		schema, err := p.parseSchemaObject(pkgPath, pkgName, typeName, true)
+		if err != nil {
+			p.debug("parseResponseComment cannot parse type", typeName)
+		}
+		return schema, nil
+	}
+
+	// handle oneOf/anyOf/allOf/not
+	sob, err := p.handleCompositeType(pkgPath, pkgName, typeName)
+	if sob != nil || err != nil {
+		return sob, err
+	}
+
+	registeredTypeName, err := p.registerType(pkgPath, pkgName, typeName)
+	if err != nil {
+		return nil, err
+	}
+	if isBasicGoType(registeredTypeName) {
+		return &SchemaObject{
+			Type: &stringType,
+		}, nil
+	} else {
+		return &SchemaObject{
+			Ref: addSchemaRefLinkPrefix(registeredTypeName),
+		}, nil
+	}
 }
 
 func (p *parser) parseResponseComment(pkgPath, pkgName string, operation *OperationObject, comment string) error {
@@ -1126,7 +1121,7 @@ func trimSplit(csl string) []string {
 	return s
 }
 
-func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string, register bool) (*SchemaObject, error) {
+func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string) (*SchemaObject, error) {
 	re := regexp.MustCompile("(oneOf|anyOf|allOf|not)\\(([^\\)]*)\\)")
 	matches := re.FindStringSubmatch(typeName)
 	if len(matches) < 3 {
@@ -1145,7 +1140,7 @@ func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string, register
 
 	var sobs []*SchemaObject
 	for i := range args {
-		result, err := p.parseSchemaObject(pkgPath, pkgName, args[i], register)
+		result, err := p.parseBodyType(pkgPath, pkgName, args[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1218,12 +1213,6 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 		localGoType := goTypesOASTypes[typeName]
 		schemaObject.Type = &localGoType
 		return &schemaObject, nil
-	}
-
-	// handle oneOf/anyOf/allOf/not
-	sob, err := p.handleCompositeType(pkgPath, pkgName, typeName, register)
-	if sob != nil || err != nil {
-		return sob, err
 	}
 
 	// handler other type

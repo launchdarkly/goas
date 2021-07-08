@@ -139,35 +139,10 @@
               "schema": {
                 "oneOf": [
                   {
-                    "type": "object",
-                    "properties": {
-                      "operations": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "op": {
-                              "type": "string"
-                            },
-                            "path": {
-                              "type": "string"
-                            },
-                            "value": {
-                              "type": "string"
-                            }
-                          }
-                        }
-                      }
-                    }
+                    "$ref": "#/components/schemas/example.FooPatchOperationSet"
                   },
                   {
-                    "type": "object",
-                    "properties": {
-                      "count": {
-                        "type": "integer",
-                        "format": "int64"
-                      }
-                    }
+                    "$ref": "#/components/schemas/example.FooMergePatch"
                   }
                 ]
               }
