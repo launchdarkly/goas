@@ -43,7 +43,9 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": ["Foo"],
+        "tags": [
+          "Foo"
+        ],
         "summary": "Get all foos",
         "description": " Get all foos",
         "operationId": "getAllFoos"
@@ -97,7 +99,9 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": ["Foo With Spaces"],
+        "tags": [
+          "Foo With Spaces"
+        ],
         "summary": "Get foos with spaces",
         "description": " Get foos with spaces",
         "operationId": "getFoosWithSpaces"
@@ -203,7 +207,9 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": ["Vfoo"],
+        "tags": [
+          "Vfoo"
+        ],
         "summary": "Get Foo as var",
         "description": " get a foo var"
       }
@@ -378,7 +384,10 @@
   },
   "security": [
     {
-      "ApiKey": ["read", "write"]
+      "ApiKey": [
+        "read",
+        "write"
+      ]
     }
   ],
   "tags": [
