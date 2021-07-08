@@ -43,9 +43,7 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": [
-          "Foo"
-        ],
+        "tags": ["Foo"],
         "summary": "Get all foos",
         "description": " Get all foos",
         "operationId": "getAllFoos"
@@ -99,12 +97,85 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": [
-          "Foo With Spaces"
-        ],
+        "tags": ["Foo With Spaces"],
         "summary": "Get foos with spaces",
         "description": " Get foos with spaces",
         "operationId": "getFoosWithSpaces"
+      }
+    },
+    "/api/v2/foo/{id}": {
+      "patch": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "401": {
+            "description": "Invalid access token"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Invalid resource identifier"
+          }
+        },
+        "summary": "Update foo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Foo id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "string",
+              "description": "Foo id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "operations": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "op": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "count": {
+                        "type": "integer",
+                        "format": "int64"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "operationId": "patchFoo"
       }
     },
     "/api/v2/foo/{id}/inner": {
@@ -157,9 +228,7 @@
             "description": "Invalid resource identifier"
           }
         },
-        "tags": [
-          "Vfoo"
-        ],
+        "tags": ["Vfoo"],
         "summary": "Get Foo as var",
         "description": " get a foo var"
       }
@@ -179,6 +248,51 @@
         "properties": {
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "example.FooMergePatch": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "example.FooPatchOperation": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "example.FooPatchOperationSet": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -289,10 +403,7 @@
   },
   "security": [
     {
-      "ApiKey": [
-        "read",
-        "write"
-      ]
+      "ApiKey": ["read", "write"]
     }
   ],
   "tags": [

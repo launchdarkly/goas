@@ -800,6 +800,21 @@ func (p *parser) parseOperation(pkgPath, pkgName string, astComments []*ast.Comm
 	return nil
 }
 
+func shouldParseSchemaObject(typeName string) bool {
+	if typeName == "time.Time" {
+		return true
+	}
+
+	supportedPrefixes := []string{"[]", "map[]", "oneOf(", "anyOf(", "allOf(", "not("}
+	for i := range supportedPrefixes {
+		if strings.HasPrefix(typeName, supportedPrefixes[i]) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (p *parser) parseParamComment(pkgPath, pkgName string, operation *OperationObject, comment string) error {
 	// {name}  {in}  {goType}  {required}  {description}
 	// user    body  User      true        "Info of a user."
@@ -900,7 +915,7 @@ func (p *parser) parseParamComment(pkgPath, pkgName string, operation *Operation
 		}
 	}
 
-	if strings.HasPrefix(goType, "[]") || strings.HasPrefix(goType, "map[]") || goType == "time.Time" {
+	if shouldParseSchemaObject(goType) {
 		schema, err := p.parseSchemaObject(pkgPath, pkgName, goType, true)
 		if err != nil {
 			p.debug("parseResponseComment cannot parse goType", goType)
