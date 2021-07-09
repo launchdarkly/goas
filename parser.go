@@ -1147,26 +1147,21 @@ func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string) (*Schema
 		sobs = append(sobs, result)
 	}
 
+	sob := &SchemaObject{}
 	switch op {
 	case "not":
-		return &SchemaObject{
-			Not: sobs[0],
-		}, nil
+		sob.Not = sobs[0]
 	case "oneOf":
-		return &SchemaObject{
-			OneOf: sobs,
-		}, nil
+		sob.OneOf = sobs
 	case "anyOf":
-		return &SchemaObject{
-			AnyOf: sobs,
-		}, nil
+		sob.AnyOf = sobs
 	case "allOf":
-		return &SchemaObject{
-			AllOf: sobs,
-		}, nil
+		sob.AllOf = sobs
 	default:
 		return nil, fmt.Errorf("Invalid composite type '%s'", op)
 	}
+
+	return sob, nil
 }
 
 func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register bool) (*SchemaObject, error) {
