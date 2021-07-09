@@ -921,7 +921,7 @@ func (p *parser) parseBodyType(pkgPath, pkgName, typeName string) (*SchemaObject
 	}
 
 	// handle oneOf/anyOf/allOf/not
-	sob, err := p.handleCompositeType(pkgPath, pkgName, typeName)
+	sob, err := p.handleCompoundType(pkgPath, pkgName, typeName)
 	if sob != nil || err != nil {
 		return sob, err
 	}
@@ -1121,7 +1121,7 @@ func trimSplit(csl string) []string {
 	return s
 }
 
-func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string) (*SchemaObject, error) {
+func (p *parser) handleCompoundType(pkgPath, pkgName, typeName string) (*SchemaObject, error) {
 	re := regexp.MustCompile("(oneOf|anyOf|allOf|not)\\(([^\\)]*)\\)")
 	matches := re.FindStringSubmatch(typeName)
 	if len(matches) < 3 {
@@ -1158,7 +1158,7 @@ func (p *parser) handleCompositeType(pkgPath, pkgName, typeName string) (*Schema
 	case "allOf":
 		sob.AllOf = sobs
 	default:
-		return nil, fmt.Errorf("Invalid composite type '%s'", op)
+		return nil, fmt.Errorf("Invalid compound type '%s'", op)
 	}
 
 	return sob, nil

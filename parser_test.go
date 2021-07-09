@@ -99,11 +99,11 @@ func Test_parseTags(t *testing.T) {
 	})
 }
 
-func Test_handleCompositeType(t *testing.T) {
+func Test_handleCompoundType(t *testing.T) {
 	t.Run("oneOf", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		result, err := p.handleCompositeType("./example", "example.com/example", "oneOf(string,[]string)")
+		result, err := p.handleCompoundType("./example", "example.com/example", "oneOf(string,[]string)")
 		require.NoError(t, err)
 		s, err := json.Marshal(result)
 		require.NoError(t, err)
@@ -113,7 +113,7 @@ func Test_handleCompositeType(t *testing.T) {
 	t.Run("anyOf", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		result, err := p.handleCompositeType("./example", "example.com/example", "anyOf(string,[]string)")
+		result, err := p.handleCompoundType("./example", "example.com/example", "anyOf(string,[]string)")
 		require.NoError(t, err)
 		s, err := json.Marshal(result)
 		require.NoError(t, err)
@@ -123,7 +123,7 @@ func Test_handleCompositeType(t *testing.T) {
 	t.Run("allOf", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		result, err := p.handleCompositeType("./example", "example.com/example", "allOf(string,[]string)")
+		result, err := p.handleCompoundType("./example", "example.com/example", "allOf(string,[]string)")
 		require.NoError(t, err)
 		s, err := json.Marshal(result)
 		require.NoError(t, err)
@@ -133,7 +133,7 @@ func Test_handleCompositeType(t *testing.T) {
 	t.Run("not", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		result, err := p.handleCompositeType("./example", "example.com/example", "not(string)")
+		result, err := p.handleCompoundType("./example", "example.com/example", "not(string)")
 		require.NoError(t, err)
 		s, err := json.Marshal(result)
 		require.NoError(t, err)
@@ -143,7 +143,7 @@ func Test_handleCompositeType(t *testing.T) {
 	t.Run("handles whitespace", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		result, err := p.handleCompositeType("./example", "example.com/example", "allOf(  string, []string )")
+		result, err := p.handleCompoundType("./example", "example.com/example", "allOf(  string, []string )")
 		require.NoError(t, err)
 		s, err := json.Marshal(result)
 		require.NoError(t, err)
@@ -153,14 +153,14 @@ func Test_handleCompositeType(t *testing.T) {
 	t.Run("not only accepts 1 arg", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		_, notErr := p.handleCompositeType("./example", "example.com/example", "not(string,int32)")
+		_, notErr := p.handleCompoundType("./example", "example.com/example", "not(string,int32)")
 		require.Error(t, notErr)
 	})
 
 	t.Run("error when no args", func(t *testing.T) {
 		p, err := newParser("example/", "example/main.go", "", false)
 		require.NoError(t, err)
-		_, notErr := p.handleCompositeType("./example", "example.com/example", "oneOf()")
+		_, notErr := p.handleCompoundType("./example", "example.com/example", "oneOf()")
 		require.Error(t, notErr)
 	})
 }
