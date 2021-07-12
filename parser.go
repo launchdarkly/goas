@@ -37,7 +37,8 @@ type parser struct {
 	GoModCachePath string
 	GoRootSrcPath  string
 
-	OpenAPI OpenAPIObject
+	OpenAPI         OpenAPIObject
+	PackageMappings map[string]*string
 
 	CorePkgs      map[string]bool
 	KnownPkgs     []pkg
@@ -209,7 +210,14 @@ func newParser(modulePath, mainFilePath, handlerPath string, debug bool) (*parse
 
 func (p *parser) parse() error {
 	// parse basic info
+	p.PackageMappings = make(map[string]*string)
+
 	err := p.parseInfo()
+	if err != nil {
+		return err
+	}
+
+	err = p.parseMapping()
 	if err != nil {
 		return err
 	}
@@ -431,6 +439,50 @@ func (p *parser) parseInfo() error {
 	}
 
 	return nil
+}
+
+func (p *parser) parseMapping() error {
+	fileTree, err := goparser.ParseFile(token.NewFileSet(), p.MainFilePath, nil, goparser.ParseComments)
+	if err != nil {
+		return fmt.Errorf("can not parse mapping from general API information: %v", err)
+	}
+
+	if fileTree.Comments != nil {
+		for i := range fileTree.Comments {
+			for _, comment := range strings.Split(fileTree.Comments[i].Text(), "\n") {
+				attribute := strings.ToLower(strings.Split(comment, " ")[0])
+				if len(attribute) == 0 || attribute[0] != '@' {
+					continue
+				}
+				value := strings.TrimSpace(comment[len(attribute):])
+				if len(value) == 0 {
+					continue
+				}
+				// p.debug(attribute, value)
+				switch attribute {
+				case "@renamepackage":
+					m, err := parseMap(comment)
+
+					if err != nil {
+						return err
+					}
+					p.PackageMappings[m.Name] = m.NewName
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func parseMap(comment string) (*MapDefinition, error) {
+	re, _ := regexp.Compile("\"([^\"]*)\"")
+	matches := re.FindAllStringSubmatch(comment, -1)
+	if len(matches) == 0 || len(matches[0]) == 1 {
+		return nil, fmt.Errorf("Expected: @Mapping \"<name>\" \"<new_name>\"] Received: %s", comment)
+	}
+	renameMap := MapDefinition{Name: matches[0][1], NewName: &matches[1][1]}
+
+	return &renameMap, nil
 }
 
 func parseTags(comment string) (*TagDefinition, error) {
@@ -1072,7 +1124,16 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 	var schemaObject *SchemaObject
 
 	// see if we've already parsed this type
-	if knownObj, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, typeName)]; ok {
+	knownObj := checkCache(pkgName, typeName, p)
+	if knownObj != nil {
+		schemaObject = knownObj
+	}
+
+	if schemaObject != nil {
+		return schemaObject, nil
+	}
+
+	if knownObj, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, typeName, p)]; ok {
 		schemaObject = knownObj
 	} else if foundType, ok := p.KnownIDSchema[typeName]; ok {
 		schemaObject = foundType
@@ -1113,7 +1174,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 	if strings.HasPrefix(typeName, "[]") {
 		schemaObject.Type = &arrayType
 		itemTypeName := typeName[2:]
-		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName)]
+		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName, p)]
 		if ok {
 			schemaObject.Items = &SchemaObject{Ref: addSchemaRefLinkPrefix(schema.ID)}
 			return &schemaObject, nil
@@ -1126,7 +1187,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 	} else if strings.HasPrefix(typeName, "map[]") {
 		schemaObject.Type = &objectType
 		itemTypeName := typeName[5:]
-		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName)]
+		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName, p)]
 		if ok {
 			schemaObject.AdditionalProperties = &SchemaObject{Ref: addSchemaRefLinkPrefix(schema.ID)}
 			return &schemaObject, nil
@@ -1168,7 +1229,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 			}
 		}
 		schemaObject.PkgName = pkgName
-		schemaObject.ID = genSchemeaObjectID(pkgName, typeName)
+		schemaObject.ID = genSchemeaObjectID(pkgName, typeName, p)
 		p.KnownIDSchema[schemaObject.ID] = &schemaObject
 	} else {
 		guessPkgName := strings.Join(typeNameParts[:len(typeNameParts)-1], "/")
@@ -1216,7 +1277,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 					guessTypeName, guessPkgName)
 			}
 			schemaObject.PkgName = guessPkgName
-			schemaObject.ID = genSchemeaObjectID(guessPkgName, guessTypeName)
+			schemaObject.ID = genSchemeaObjectID(guessPkgName, guessTypeName, p)
 			p.KnownIDSchema[schemaObject.ID] = &schemaObject
 		}
 		pkgPath, pkgName = guessPkgPath, guessPkgName

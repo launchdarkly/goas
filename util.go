@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -154,11 +155,17 @@ func trimeSchemaRefLinkPrefix(ref string) string {
 	return strings.TrimPrefix(ref, "#/components/schemas/")
 }
 
-func genSchemeaObjectID(pkgName, typeName string) string {
-	typeNameParts := strings.Split(typeName, ".")
-	pkgName = replaceBackslash(pkgName)
+func genSchemeaObjectID(pkgName, typeName string, p *parser) string {
+	validatedPkgName := checkAndMutatePackageName(pkgName, p)
+	validatedTypeName := checkAndMutateTypeName(typeName, p)
+	typeNameParts := strings.Split(validatedTypeName, ".")
+	pkgName = replaceBackslash(validatedPkgName)
 	pkgNameParts := strings.Split(pkgName, "/")
-	return strings.Join(append([]string{pkgNameParts[len(pkgNameParts)-1]}, typeNameParts[len(typeNameParts)-1]), ".")
+	if pkgNameParts[len(pkgNameParts)-1] == "" {
+		return typeNameParts[len(typeNameParts)-1]
+	} else {
+		return strings.Join(append([]string{pkgNameParts[len(pkgNameParts)-1]}, typeNameParts[len(typeNameParts)-1]), ".")
+	}
 }
 
 func replaceBackslash(origin string) string {
@@ -170,4 +177,50 @@ func checkFormatInt64(typeName string, schemaObject *SchemaObject) {
 	if typeName == "int64" {
 		schemaObject.Format = "int64"
 	}
+}
+
+func checkAndMutatePackageName(pkgName string, parser *parser) string {
+	pkgName = replaceBackslash(pkgName)
+	pkgNameParts := strings.Split(pkgName, "/")
+	lastPart := pkgNameParts[len(pkgNameParts)-1]
+	if val, ok := parser.PackageMappings[lastPart]; ok {
+		return *val
+	} else {
+		return pkgName
+	}
+}
+
+func checkAndMutateTypeName(typeName string, parser *parser) string {
+	typeName = replaceBackslash(typeName)
+	typeNameParts := strings.Split(typeName, ".")
+	firstPart := typeNameParts[0]
+	if val, ok := parser.PackageMappings[firstPart]; ok {
+		if *val != "" {
+			return fmt.Sprintf("%s.%s", *val, typeName)
+		} else {
+			return typeNameParts[len(typeNameParts)-1]
+		}
+	} else {
+		return typeName
+	}
+}
+
+func checkCache(pkgName, typeName string, p *parser) *SchemaObject {
+	for _, v := range p.PackageMappings {
+		currentName := genSchemeaObjectID(pkgName, typeName, p)
+		splitName := strings.Split(currentName, ".")
+		if len(splitName) == 1 {
+			newName := *v + splitName[0]
+			if foundObject, ok := p.KnownIDSchema[newName]; ok {
+				return foundObject
+			}
+		} else if len(splitName) == 2 {
+			newName := *v + splitName[1]
+			if foundObject, ok := p.KnownIDSchema[newName]; ok {
+				return foundObject
+			}
+		}
+	}
+	return nil
+
 }

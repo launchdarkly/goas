@@ -295,3 +295,8 @@ type TagDefinition struct {
 	Name        string          `json:"name"`
 	Description *ReffableString `json:"description,omitempty"`
 }
+
+type MapDefinition struct {
+	Name    string  `json:"name"`
+	NewName *string `json:"newName"`
+}

@@ -28,7 +28,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/example.FooResponse"
+                  "$ref": "#/components/schemas/FooResponse"
                 }
               }
             }
@@ -57,7 +57,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/example.FooResponse"
+                  "$ref": "#/components/schemas/FooResponse"
                 }
               }
             }
@@ -84,7 +84,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/example.FooResponse"
+                  "$ref": "#/components/schemas/FooResponse"
                 }
               }
             }
@@ -115,7 +115,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/example.InnerFoo"
+                  "$ref": "#/components/schemas/InnerFoo"
                 }
               }
             }
@@ -142,7 +142,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/example.FooResponse"
+                  "$ref": "#/components/schemas/FooResponse"
                 }
               }
             }
@@ -167,14 +167,14 @@
   },
   "components": {
     "schemas": {
-      "example.BsonID": {
+      "BsonID": {
         "type": "string"
       },
-      "example.DoubleAlias": {
+      "DoubleAlias": {
         "type": "object",
         "additionalProperties": {}
       },
-      "example.Environment": {
+      "Environment": {
         "type": "object",
         "properties": {
           "name": {
@@ -182,11 +182,11 @@
           }
         }
       },
-      "example.FooResponse": {
+      "FooResponse": {
         "type": "object",
         "properties": {
           "bsonId": {
-            "$ref": "#/components/schemas/example.BsonID"
+            "$ref": "#/components/schemas/BsonID"
           },
           "id": {
             "type": "string"
@@ -196,7 +196,7 @@
             "format": "date-time"
           },
           "endDate": {
-            "$ref": "#/components/schemas/example.UnixMillis"
+            "$ref": "#/components/schemas/UnixMillis"
           },
           "count": {
             "type": "integer",
@@ -233,20 +233,20 @@
           },
           "freeForm": {},
           "jsonMap": {
-            "$ref": "#/components/schemas/example.JsonMap"
+            "$ref": "#/components/schemas/JsonMap"
           },
           "doubleAlias": {
-            "$ref": "#/components/schemas/example.DoubleAlias"
+            "$ref": "#/components/schemas/DoubleAlias"
           },
           "interfaceBlah": {
-            "$ref": "#/components/schemas/example.InterfaceResponse"
+            "$ref": "#/components/schemas/InterfaceResponse"
           },
           "instruction": {
-            "$ref": "#/components/schemas/example.Instruction"
+            "$ref": "#/components/schemas/Instruction"
           },
           "bsonPtr": {
             "example": "blah blah blah",
-            "$ref": "#/components/schemas/example.BsonID"
+            "$ref": "#/components/schemas/BsonID"
           },
           "randomBool": {
             "type": "boolean",
@@ -254,7 +254,7 @@
           }
         }
       },
-      "example.InnerFoo": {
+      "InnerFoo": {
         "type": "object",
         "properties": {
           "a": {
@@ -265,16 +265,16 @@
           }
         }
       },
-      "example.Instruction": {
+      "Instruction": {
         "type": "object",
         "additionalProperties": {}
       },
-      "example.InterfaceResponse": {},
-      "example.JsonMap": {
+      "InterfaceResponse": {},
+      "JsonMap": {
         "type": "object",
         "additionalProperties": {}
       },
-      "example.UnixMillis": {
+      "UnixMillis": {
         "type": "integer",
         "format": "int64"
       }
