@@ -37,8 +37,8 @@ type parser struct {
 	GoModCachePath string
 	GoRootSrcPath  string
 
-	OpenAPI         OpenAPIObject
-	PackageMappings map[string]*string
+	OpenAPI        OpenAPIObject
+	PackageAliases map[string]*string
 
 	CorePkgs      map[string]bool
 	KnownPkgs     []pkg
@@ -210,14 +210,14 @@ func newParser(modulePath, mainFilePath, handlerPath string, debug bool) (*parse
 
 func (p *parser) parse() error {
 	// parse basic info
-	p.PackageMappings = make(map[string]*string)
+	p.PackageAliases = make(map[string]*string)
 
 	err := p.parseInfo()
 	if err != nil {
 		return err
 	}
 
-	err = p.parseMapping()
+	err = p.parsePackageAliases()
 	if err != nil {
 		return err
 	}
@@ -441,7 +441,7 @@ func (p *parser) parseInfo() error {
 	return nil
 }
 
-func (p *parser) parseMapping() error {
+func (p *parser) parsePackageAliases() error {
 	fileTree, err := goparser.ParseFile(token.NewFileSet(), p.MainFilePath, nil, goparser.ParseComments)
 	if err != nil {
 		return fmt.Errorf("can not parse mapping from general API information: %v", err)
@@ -460,13 +460,13 @@ func (p *parser) parseMapping() error {
 				}
 				// p.debug(attribute, value)
 				switch attribute {
-				case "@renamepackage":
-					m, err := parseMap(comment)
+				case "@packagealias":
+					m, err := parsePackageAliases(comment)
 
 					if err != nil {
 						return err
 					}
-					p.PackageMappings[m.Name] = m.NewName
+					p.PackageAliases[m.Name] = m.NewName
 				}
 			}
 		}
@@ -474,7 +474,7 @@ func (p *parser) parseMapping() error {
 	return nil
 }
 
-func parseMap(comment string) (*MapDefinition, error) {
+func parsePackageAliases(comment string) (*MapDefinition, error) {
 	re, _ := regexp.Compile("\"([^\"]*)\"")
 	matches := re.FindAllStringSubmatch(comment, -1)
 	if len(matches) == 0 || len(matches[0]) == 1 {
@@ -1133,7 +1133,7 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 		return schemaObject, nil
 	}
 
-	if knownObj, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, typeName, p)]; ok {
+	if knownObj, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, typeName, p)]; ok {
 		schemaObject = knownObj
 	} else if foundType, ok := p.KnownIDSchema[typeName]; ok {
 		schemaObject = foundType
@@ -1174,7 +1174,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 	if strings.HasPrefix(typeName, "[]") {
 		schemaObject.Type = &arrayType
 		itemTypeName := typeName[2:]
-		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName, p)]
+		schema, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, itemTypeName, p)]
 		if ok {
 			schemaObject.Items = &SchemaObject{Ref: addSchemaRefLinkPrefix(schema.ID)}
 			return &schemaObject, nil
@@ -1187,7 +1187,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 	} else if strings.HasPrefix(typeName, "map[]") {
 		schemaObject.Type = &objectType
 		itemTypeName := typeName[5:]
-		schema, ok := p.KnownIDSchema[genSchemeaObjectID(pkgName, itemTypeName, p)]
+		schema, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, itemTypeName, p)]
 		if ok {
 			schemaObject.AdditionalProperties = &SchemaObject{Ref: addSchemaRefLinkPrefix(schema.ID)}
 			return &schemaObject, nil
@@ -1229,7 +1229,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 			}
 		}
 		schemaObject.PkgName = pkgName
-		schemaObject.ID = genSchemeaObjectID(pkgName, typeName, p)
+		schemaObject.ID = genSchemaObjectID(pkgName, typeName, p)
 		p.KnownIDSchema[schemaObject.ID] = &schemaObject
 	} else {
 		guessPkgName := strings.Join(typeNameParts[:len(typeNameParts)-1], "/")
@@ -1277,7 +1277,7 @@ func (p *parser) parseSchemaObject(pkgPath, pkgName, typeName string, register b
 					guessTypeName, guessPkgName)
 			}
 			schemaObject.PkgName = guessPkgName
-			schemaObject.ID = genSchemeaObjectID(guessPkgName, guessTypeName, p)
+			schemaObject.ID = genSchemaObjectID(guessPkgName, guessTypeName, p)
 			p.KnownIDSchema[schemaObject.ID] = &schemaObject
 		}
 		pkgPath, pkgName = guessPkgPath, guessPkgName
@@ -1627,6 +1627,52 @@ func (p *parser) debugf(format string, args ...interface{}) {
 	if p.Debug {
 		log.Printf(format, args...)
 	}
+}
+
+func (p *parser) checkAndMutatePackageName(pkgName string) string {
+	pkgName = replaceBackslash(pkgName)
+	pkgNameParts := strings.Split(pkgName, "/")
+	lastPart := pkgNameParts[len(pkgNameParts)-1]
+	if val, ok := p.PackageAliases[lastPart]; ok {
+		return *val
+	} else {
+		return pkgName
+	}
+}
+
+func (p *parser) checkAndMutateTypeName(typeName string) string {
+	typeName = replaceBackslash(typeName)
+	typeNameParts := strings.Split(typeName, ".")
+	firstPart := typeNameParts[0]
+	if val, ok := p.PackageAliases[firstPart]; ok {
+		if *val != "" {
+			return fmt.Sprintf("%s.%s", *val, typeName)
+		} else {
+			return typeNameParts[len(typeNameParts)-1]
+		}
+	} else {
+		return typeName
+	}
+}
+
+func checkCache(pkgName, typeName string, p *parser) *SchemaObject {
+	for _, v := range p.PackageAliases {
+		currentName := genSchemaObjectID(pkgName, typeName, p)
+		splitName := strings.Split(currentName, ".")
+		if len(splitName) == 1 {
+			newName := *v + splitName[0]
+			if foundObject, ok := p.KnownIDSchema[newName]; ok {
+				return foundObject
+			}
+		} else if len(splitName) == 2 {
+			newName := *v + splitName[1]
+			if foundObject, ok := p.KnownIDSchema[newName]; ok {
+				return foundObject
+			}
+		}
+	}
+	return nil
+
 }
 
 func sortedPackageKeys(m map[string]*ast.Package) []string {
