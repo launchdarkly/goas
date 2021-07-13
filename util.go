@@ -185,7 +185,7 @@ func checkAndMutateTypeName(typeName string, aliases map[string]*string) string 
 	firstPart := typeNameParts[0]
 	if val, ok := aliases[firstPart]; ok {
 		if *val != "" {
-			return fmt.Sprintf("%s.%s", *val, typeName)
+			return fmt.Sprintf("%s.%s", *val, typeNameParts[len(typeNameParts)-1])
 		} else {
 			return typeNameParts[len(typeNameParts)-1]
 		}
