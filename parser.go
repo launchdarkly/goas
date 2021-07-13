@@ -1126,11 +1126,7 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 	// see if we've already parsed this type
 	knownObj := p.checkCache(pkgName, typeName)
 	if knownObj != nil {
-		schemaObject = knownObj
-	}
-
-	if schemaObject != nil {
-		return schemaObject, nil
+		return knownObj, nil
 	}
 
 	if knownObj, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, typeName, p.PackageAliases)]; ok {
@@ -1629,6 +1625,7 @@ func (p *parser) debugf(format string, args ...interface{}) {
 	}
 }
 
+// checkCache loops over possible aliased package names for a type to see if it's already in cache and returns that if found.
 func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
 	for _, v := range p.PackageAliases {
 		currentName := genSchemaObjectID(pkgName, typeName, p.PackageAliases)

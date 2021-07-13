@@ -169,19 +169,19 @@ func genSchemaObjectID(pkgName, typeName string, aliases map[string]*string) str
 }
 
 func checkAndMutatePackageName(pkgName string, aliases map[string]*string) string {
-	pkgName = replaceBackslash(pkgName)
-	pkgNameParts := strings.Split(pkgName, "/")
+	pkgNameParsed := replaceBackslash(pkgName)
+	pkgNameParts := strings.Split(pkgNameParsed, "/")
 	lastPart := pkgNameParts[len(pkgNameParts)-1]
 	if val, ok := aliases[lastPart]; ok {
 		return *val
 	} else {
-		return pkgName
+		return pkgNameParsed
 	}
 }
 
 func checkAndMutateTypeName(typeName string, aliases map[string]*string) string {
-	typeName = replaceBackslash(typeName)
-	typeNameParts := strings.Split(typeName, ".")
+	typeNameParsed := replaceBackslash(typeName)
+	typeNameParts := strings.Split(typeNameParsed, ".")
 	firstPart := typeNameParts[0]
 	if val, ok := aliases[firstPart]; ok {
 		if *val != "" {
@@ -190,7 +190,7 @@ func checkAndMutateTypeName(typeName string, aliases map[string]*string) string 
 			return typeNameParts[len(typeNameParts)-1]
 		}
 	} else {
-		return typeName
+		return typeNameParsed
 	}
 }
 
