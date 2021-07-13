@@ -212,12 +212,7 @@ func (p *parser) parse() error {
 	// parse basic info
 	p.PackageAliases = make(map[string]*string)
 
-	err := p.parseInfo()
-	if err != nil {
-		return err
-	}
-
-	err = p.parsePackageAliases()
+	err := p.parseEntryPoint()
 	if err != nil {
 		return err
 	}
@@ -269,7 +264,7 @@ func (p *parser) CreateOASFile(path string) error {
 	return err
 }
 
-func (p *parser) parseInfo() error {
+func (p *parser) parseEntryPoint() error {
 	fileTree, err := goparser.ParseFile(token.NewFileSet(), p.MainFilePath, nil, goparser.ParseComments)
 	if err != nil {
 		return fmt.Errorf("can not parse general API information: %v", err)
@@ -408,6 +403,13 @@ func (p *parser) parseInfo() error {
 					}
 
 					p.OpenAPI.Tags = append(p.OpenAPI.Tags, *t)
+				case "@packagealias":
+					m, err := parsePackageAliases(comment)
+
+					if err != nil {
+						return err
+					}
+					p.PackageAliases[m.Name] = m.NewName
 				}
 			}
 		}
@@ -438,39 +440,6 @@ func (p *parser) parseInfo() error {
 		}
 	}
 
-	return nil
-}
-
-func (p *parser) parsePackageAliases() error {
-	fileTree, err := goparser.ParseFile(token.NewFileSet(), p.MainFilePath, nil, goparser.ParseComments)
-	if err != nil {
-		return fmt.Errorf("can not parse mapping from general API information: %v", err)
-	}
-
-	if fileTree.Comments != nil {
-		for i := range fileTree.Comments {
-			for _, comment := range strings.Split(fileTree.Comments[i].Text(), "\n") {
-				attribute := strings.ToLower(strings.Split(comment, " ")[0])
-				if len(attribute) == 0 || attribute[0] != '@' {
-					continue
-				}
-				value := strings.TrimSpace(comment[len(attribute):])
-				if len(value) == 0 {
-					continue
-				}
-				// p.debug(attribute, value)
-				switch attribute {
-				case "@packagealias":
-					m, err := parsePackageAliases(comment)
-
-					if err != nil {
-						return err
-					}
-					p.PackageAliases[m.Name] = m.NewName
-				}
-			}
-		}
-	}
 	return nil
 }
 
