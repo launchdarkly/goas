@@ -447,7 +447,7 @@ func parsePackageAliases(comment string) (*MapDefinition, error) {
 	re, _ := regexp.Compile("\"([^\"]*)\"")
 	matches := re.FindAllStringSubmatch(comment, -1)
 	if len(matches) == 0 || len(matches[0]) == 1 {
-		return nil, fmt.Errorf("Expected: @Mapping \"<name>\" \"<new_name>\"] Received: %s", comment)
+		return nil, fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
 	}
 	renameMap := MapDefinition{Name: matches[0][1], NewName: &matches[1][1]}
 
