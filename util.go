@@ -156,11 +156,10 @@ func trimeSchemaRefLinkPrefix(ref string) string {
 }
 
 func genSchemaObjectID(pkgName, typeName string, aliases map[string]*string) string {
-	validatedPkgName := checkAndMutatePackageName(pkgName, aliases)
-	validatedTypeName := checkAndMutateTypeName(typeName, aliases)
-	typeNameParts := strings.Split(validatedTypeName, ".")
-	pkgName = replaceBackslash(validatedPkgName)
-	pkgNameParts := strings.Split(pkgName, "/")
+	aliasedPkgName := getAliasedPackageName(pkgName, aliases)
+	aliasedTypeName := getAliasedTypeName(typeName, aliases)
+	typeNameParts := strings.Split(aliasedTypeName, ".")
+	pkgNameParts := strings.Split(aliasedPkgName, "/")
 	if pkgNameParts[len(pkgNameParts)-1] == "" {
 		return typeNameParts[len(typeNameParts)-1]
 	} else {
@@ -168,7 +167,7 @@ func genSchemaObjectID(pkgName, typeName string, aliases map[string]*string) str
 	}
 }
 
-func checkAndMutatePackageName(pkgName string, aliases map[string]*string) string {
+func getAliasedPackageName(pkgName string, aliases map[string]*string) string {
 	pkgNameParsed := replaceBackslash(pkgName)
 	pkgNameParts := strings.Split(pkgNameParsed, "/")
 	lastPart := pkgNameParts[len(pkgNameParts)-1]
@@ -179,9 +178,8 @@ func checkAndMutatePackageName(pkgName string, aliases map[string]*string) strin
 	}
 }
 
-func checkAndMutateTypeName(typeName string, aliases map[string]*string) string {
-	typeNameParsed := replaceBackslash(typeName)
-	typeNameParts := strings.Split(typeNameParsed, ".")
+func getAliasedTypeName(typeName string, aliases map[string]*string) string {
+	typeNameParts := strings.Split(typeName, ".")
 	firstPart := typeNameParts[0]
 	if val, ok := aliases[firstPart]; ok {
 		if *val != "" {
@@ -190,7 +188,7 @@ func checkAndMutateTypeName(typeName string, aliases map[string]*string) string 
 			return typeNameParts[len(typeNameParts)-1]
 		}
 	} else {
-		return typeNameParsed
+		return typeName
 	}
 }
 

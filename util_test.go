@@ -27,10 +27,10 @@ func Test_genSchemaObjectID(t *testing.T) {
 	})
 }
 
-func Test_checkAndMutateTypeName(t *testing.T) {
+func Test_getAliasedTypeName(t *testing.T) {
 	t.Run("check no change", func(t *testing.T) {
 		emptyMap := make(map[string]*string)
-		result := checkAndMutateTypeName("mypackage.test", emptyMap)
+		result := getAliasedTypeName("mypackage.test", emptyMap)
 
 		require.Equal(t, "mypackage.test", string(result))
 	})
@@ -39,7 +39,7 @@ func Test_checkAndMutateTypeName(t *testing.T) {
 		emptyMap := make(map[string]*string)
 		emptyString := ""
 		emptyMap["mypackage"] = &emptyString
-		result := checkAndMutateTypeName("mypackage.test", emptyMap)
+		result := getAliasedTypeName("mypackage.test", emptyMap)
 
 		require.Equal(t, "test", string(result))
 	})
@@ -48,17 +48,17 @@ func Test_checkAndMutateTypeName(t *testing.T) {
 		emptyMap := make(map[string]*string)
 		emptyString := "newpackage"
 		emptyMap["mypackage"] = &emptyString
-		result := checkAndMutateTypeName("mypackage.test", emptyMap)
+		result := getAliasedTypeName("mypackage.test", emptyMap)
 
 		require.Equal(t, "newpackage.test", string(result))
 	})
 }
 
-func Test_checkAndMutatePackageName(t *testing.T) {
+func Test_getAliasedPackageName(t *testing.T) {
 	pkgName := "example/go/mypackage"
 	t.Run("check no change", func(t *testing.T) {
 		emptyMap := make(map[string]*string)
-		result := checkAndMutatePackageName(pkgName, emptyMap)
+		result := getAliasedPackageName(pkgName, emptyMap)
 
 		require.Equal(t, "example/go/mypackage", string(result))
 	})
@@ -67,7 +67,7 @@ func Test_checkAndMutatePackageName(t *testing.T) {
 		emptyMap := make(map[string]*string)
 		emptyString := ""
 		emptyMap["mypackage"] = &emptyString
-		result := checkAndMutatePackageName(pkgName, emptyMap)
+		result := getAliasedPackageName(pkgName, emptyMap)
 
 		require.Equal(t, "", string(result))
 	})
@@ -76,7 +76,7 @@ func Test_checkAndMutatePackageName(t *testing.T) {
 		emptyMap := make(map[string]*string)
 		emptyString := "newpackage"
 		emptyMap["mypackage"] = &emptyString
-		result := checkAndMutatePackageName(pkgName, emptyMap)
+		result := getAliasedPackageName(pkgName, emptyMap)
 
 		require.Equal(t, "newpackage", string(result))
 	})
