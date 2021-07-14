@@ -73,7 +73,7 @@ func putFoo() {
 // @Failure 401 "Invalid access token"
 // @Failure 403 "Forbidden"
 // @Failure 404 "Invalid resource identifier"
-func putFoo() {
+func postFoo() {
 
 }
 
