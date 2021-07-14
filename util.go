@@ -155,7 +155,7 @@ func trimeSchemaRefLinkPrefix(ref string) string {
 	return strings.TrimPrefix(ref, "#/components/schemas/")
 }
 
-func genSchemaObjectID(pkgName, typeName string, aliases map[string]*string) string {
+func genSchemaObjectID(pkgName, typeName string, aliases map[string]string) string {
 	aliasedPkgName := getAliasedPackageName(pkgName, aliases)
 	aliasedTypeName := getAliasedTypeName(typeName, aliases)
 	typeNameParts := strings.Split(aliasedTypeName, ".")
@@ -167,23 +167,23 @@ func genSchemaObjectID(pkgName, typeName string, aliases map[string]*string) str
 	}
 }
 
-func getAliasedPackageName(pkgName string, aliases map[string]*string) string {
+func getAliasedPackageName(pkgName string, aliases map[string]string) string {
 	pkgNameParsed := replaceBackslash(pkgName)
 	pkgNameParts := strings.Split(pkgNameParsed, "/")
 	lastPart := pkgNameParts[len(pkgNameParts)-1]
 	if val, ok := aliases[lastPart]; ok {
-		return *val
+		return val
 	} else {
 		return pkgNameParsed
 	}
 }
 
-func getAliasedTypeName(typeName string, aliases map[string]*string) string {
+func getAliasedTypeName(typeName string, aliases map[string]string) string {
 	typeNameParts := strings.Split(typeName, ".")
 	firstPart := typeNameParts[0]
 	if val, ok := aliases[firstPart]; ok {
-		if *val != "" {
-			return fmt.Sprintf("%s.%s", *val, typeNameParts[len(typeNameParts)-1])
+		if val != "" {
+			return fmt.Sprintf("%s.%s", val, typeNameParts[len(typeNameParts)-1])
 		} else {
 			return typeNameParts[len(typeNameParts)-1]
 		}

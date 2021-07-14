@@ -38,7 +38,7 @@ type parser struct {
 	GoRootSrcPath  string
 
 	OpenAPI        OpenAPIObject
-	PackageAliases map[string]*string
+	PackageAliases map[string]string
 
 	CorePkgs      map[string]bool
 	KnownPkgs     []pkg
@@ -210,7 +210,7 @@ func newParser(modulePath, mainFilePath, handlerPath string, debug bool) (*parse
 
 func (p *parser) parse() error {
 	// parse basic info
-	p.PackageAliases = make(map[string]*string)
+	p.PackageAliases = make(map[string]string)
 
 	err := p.parseEntryPoint()
 	if err != nil {
@@ -404,12 +404,12 @@ func (p *parser) parseEntryPoint() error {
 
 					p.OpenAPI.Tags = append(p.OpenAPI.Tags, *t)
 				case "@packagealias":
-					m, err := parsePackageAliases(comment)
+					originalName, newName, err := parsePackageAliases(comment)
 
 					if err != nil {
 						return err
 					}
-					p.PackageAliases[m.Name] = m.NewName
+					p.PackageAliases[originalName] = newName
 				}
 			}
 		}
@@ -443,15 +443,15 @@ func (p *parser) parseEntryPoint() error {
 	return nil
 }
 
-func parsePackageAliases(comment string) (*MapDefinition, error) {
+func parsePackageAliases(comment string) (string, string, error) {
 	re, _ := regexp.Compile("\"([^\"]*)\"")
 	matches := re.FindAllStringSubmatch(comment, -1)
 	if len(matches) == 0 || len(matches[0]) == 1 {
-		return nil, fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
+		return "", "", fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
 	}
-	renameMap := MapDefinition{Name: matches[0][1], NewName: &matches[1][1]}
+	//renameMap := MapDefinition{Name: matches[0][1], NewName: &matches[1][1]}
 
-	return &renameMap, nil
+	return matches[0][1], matches[1][1], nil
 }
 
 func parseTags(comment string) (*TagDefinition, error) {
@@ -1594,12 +1594,12 @@ func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
 		currentName := genSchemaObjectID(pkgName, typeName, p.PackageAliases)
 		splitName := strings.Split(currentName, ".")
 		if len(splitName) == 1 {
-			newName := *v + splitName[0]
+			newName := v + splitName[0]
 			if foundObject, ok := p.KnownIDSchema[newName]; ok {
 				return foundObject
 			}
 		} else if len(splitName) == 2 {
-			newName := *v + splitName[1]
+			newName := v + splitName[1]
 			if foundObject, ok := p.KnownIDSchema[newName]; ok {
 				return foundObject
 			}
