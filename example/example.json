@@ -74,6 +74,41 @@
         },
         "summary": "Put foo",
         "description": " Overwrite a foo"
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Successful foo response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FooResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid access token"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Invalid resource identifier"
+          }
+        },
+        "summary": "Post foo",
+        "description": " Post a foo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FooBody"
+              }
+            }
+          },
+          "required": true
+        }
       }
     },
     "/api/v2/foo-spaces": {
@@ -251,6 +286,17 @@
           "randomBool": {
             "type": "boolean",
             "example": true
+          }
+        }
+      },
+      "FooBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "Example": {
+            "$ref": "#/components/schemas/DoubleAlias"
           }
         }
       },
