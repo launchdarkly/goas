@@ -449,7 +449,6 @@ func parsePackageAliases(comment string) (string, string, error) {
 	if len(matches) == 0 || len(matches[0]) == 1 {
 		return "", "", fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
 	}
-	//renameMap := MapDefinition{Name: matches[0][1], NewName: &matches[1][1]}
 
 	return matches[0][1], matches[1][1], nil
 }
