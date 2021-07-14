@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/ast"
 	goparser "go/parser"
@@ -1092,9 +1093,9 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 	var schemaObject *SchemaObject
 
 	// see if we've already parsed this type
-	knownObj := p.checkCache(pkgName, typeName)
-	if knownObj != nil {
-		return knownObj, nil
+	cachedObj := p.checkCache(pkgName, typeName)
+	if cachedObj != nil {
+		return cachedObj, nil
 	} else {
 		// if not, parse it now
 		parsedObject, err := p.parseSchemaObject(pkgPath, pkgName, typeName, true)
@@ -1119,6 +1120,11 @@ func (p *parser) registerType(pkgPath, pkgName, typeName string) (string, error)
 		}
 		registerTypeName = schemaObject.ID
 	}
+
+	if registerTypeName == "" {
+		return "", errors.New(fmt.Sprintf("Could not parse schema for %s %s %s", pkgName, pkgName, typeName))
+	}
+
 	return registerTypeName, nil
 }
 
@@ -1589,6 +1595,12 @@ func (p *parser) debugf(format string, args ...interface{}) {
 
 // checkCache loops over possible aliased package names for a type to see if it's already in cache and returns that if found.
 func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
+	if knownObj, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, typeName, p.PackageAliases)]; ok {
+		return knownObj
+	} else if knownObj, ok := p.KnownIDSchema[typeName]; ok {
+		return knownObj
+	}
+
 	for _, v := range p.PackageAliases {
 		currentName := genSchemaObjectID(pkgName, typeName, p.PackageAliases)
 		splitName := strings.Split(currentName, ".")
@@ -1602,6 +1614,8 @@ func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
 			if foundObject, ok := p.KnownIDSchema[newName]; ok {
 				return foundObject
 			}
+		} else {
+			fmt.Println("Should not happen")
 		}
 	}
 	return nil
