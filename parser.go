@@ -444,7 +444,7 @@ func (p *parser) parseEntryPoint() error {
 }
 
 func parsePackageAliases(comment string) (string, string, error) {
-	re, _ := regexp.Compile("\"([^\"]*)\"")
+	re := regexp.MustCompile("\"([^\"]*)\"")
 	matches := re.FindAllStringSubmatch(comment, -1)
 	if len(matches) == 0 || len(matches[0]) == 1 {
 		return "", "", fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
@@ -455,7 +455,7 @@ func parsePackageAliases(comment string) (string, string, error) {
 }
 
 func parseTags(comment string) (*TagDefinition, error) {
-	re, _ := regexp.Compile("\"([^\"]*)\"")
+	re := regexp.MustCompile("\"([^\"]*)\"")
 	matches := re.FindAllStringSubmatch(comment, -1)
 	if len(matches) == 0 || len(matches[0]) == 1 {
 		return nil, fmt.Errorf("Expected: @Tags \"<name>\" [\"<description>\"] Received: %s", comment)
