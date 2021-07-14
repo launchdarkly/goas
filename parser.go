@@ -1595,14 +1595,14 @@ func (p *parser) debugf(format string, args ...interface{}) {
 
 // checkCache loops over possible aliased package names for a type to see if it's already in cache and returns that if found.
 func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
-	if knownObj, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, typeName, p.PackageAliases)]; ok {
+	currentName := genSchemaObjectID(pkgName, typeName, p.PackageAliases)
+	if knownObj, ok := p.KnownIDSchema[currentName]; ok {
 		return knownObj
 	} else if knownObj, ok := p.KnownIDSchema[typeName]; ok {
 		return knownObj
 	}
 
 	for _, v := range p.PackageAliases {
-		currentName := genSchemaObjectID(pkgName, typeName, p.PackageAliases)
 		splitName := strings.Split(currentName, ".")
 		if len(splitName) == 1 {
 			newName := v + splitName[0]
