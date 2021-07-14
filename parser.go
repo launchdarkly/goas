@@ -1096,12 +1096,6 @@ func (p *parser) getSchemaObjectCached(pkgPath, pkgName, typeName string) (*Sche
 	knownObj := p.checkCache(pkgName, typeName)
 	if knownObj != nil {
 		return knownObj, nil
-	}
-
-	if knownObj, ok := p.KnownIDSchema[genSchemaObjectID(pkgName, typeName, p.PackageAliases)]; ok {
-		schemaObject = knownObj
-	} else if foundType, ok := p.KnownIDSchema[typeName]; ok {
-		schemaObject = foundType
 	} else {
 		// if not, parse it now
 		parsedObject, err := p.parseSchemaObject(pkgPath, pkgName, typeName, true)
