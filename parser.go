@@ -450,7 +450,6 @@ func parsePackageAliases(comment string) (string, string, error) {
 	if len(matches) == 0 || len(matches[0]) == 1 {
 		return "", "", fmt.Errorf("Expected: @PackageAlias \"<name>\" \"<alias>\"] Received: %s", comment)
 	}
-
 	return matches[0][1], matches[1][1], nil
 }
 
@@ -1614,9 +1613,14 @@ func (p *parser) checkCache(pkgName, typeName string) *SchemaObject {
 			if foundObject, ok := p.KnownIDSchema[newName]; ok {
 				return foundObject
 			}
-		} else {
-			fmt.Println("Should not happen")
 		}
+
+		typeNameParts := strings.Split(typeName, ".")
+		typeAlias := v + "." + typeNameParts[len(typeNameParts)-1]
+		if foundObject, ok := p.KnownIDSchema[typeAlias]; ok {
+			return foundObject
+		}
+
 	}
 	return nil
 

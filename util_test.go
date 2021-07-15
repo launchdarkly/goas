@@ -44,7 +44,7 @@ func Test_getAliasedTypeName(t *testing.T) {
 		require.Equal(t, "test", string(result))
 	})
 
-	t.Run("check alias rename", func(t *testing.T) {
+	t.Run("check type rename", func(t *testing.T) {
 		emptyMap := make(map[string]string)
 		emptyString := "newpackage"
 		emptyMap["mypackage"] = emptyString

@@ -238,9 +238,7 @@
             "format": "int64",
             "example": 6
           },
-          "msg": {
-            "type": "object"
-          },
+          "msg": {},
           "foo": {
             "type": "array",
             "items": {

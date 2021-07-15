@@ -187,9 +187,9 @@ func getAliasedTypeName(typeName string, aliases map[string]string) string {
 		} else {
 			return typeNameParts[len(typeNameParts)-1]
 		}
-	} else {
-		return typeName
 	}
+
+	return typeName
 }
 
 func replaceBackslash(origin string) string {
