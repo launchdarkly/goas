@@ -1,6 +1,6 @@
 {
   "openapi": "3.0.0",
-  "info": {k
+  "info": {
     "title": "LaunchDarkly REST API",
     "description": "Build custom integrations with the LaunchDarkly REST API",
     "contact": {
@@ -178,10 +178,10 @@
               "schema": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/example.FooPatchOperationSet"
+                    "$ref": "#/components/schemas/FooPatchOperationSet"
                   },
                   {
-                    "$ref": "#/components/schemas/example.FooMergePatch"
+                    "$ref": "#/components/schemas/FooMergePatch"
                   }
                 ]
               }
@@ -264,6 +264,51 @@
         "properties": {
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "FooMergePatch": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "FooPatchOperation": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "FooPatchOperationSet": {
+        "type": "object",
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
