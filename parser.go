@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	goparser "go/parser"
 	"go/token"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -305,7 +304,7 @@ func fetchRef(description string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
